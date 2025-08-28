@@ -1,0 +1,626 @@
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MusicFinder - Search & Discover Music</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                fontFamily: {
+                    'inter': ['Inter', 'sans-serif'],
+                },
+                colors: {
+                    'spotify-green': '#1DB954',
+                    'dark-bg': '#0F0F0F',
+                    'dark-card': '#1A1A1A',
+                    'dark-hover': '#2A2A2A',
+                }
+            }
+        }
+    };
+    </script>
+</head>
+<body class="font-inter bg-white dark:bg-dark-bg text-gray-900 dark:text-white transition-colors duration-300">
+    
+    <!-- @COMPONENT: Navbar -->
+    <nav class="bg-white dark:bg-dark-card shadow-sm dark:shadow-gray-800 sticky top-0 z-50 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-music text-2xl text-spotify-green"></i>
+                    <span class="text-xl font-bold">MusicFinder</span>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#" data-page="home" class="nav-link text-spotify-green font-medium border-b-2 border-spotify-green pb-1">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </a>
+                    <a href="#" data-page="favorites" class="nav-link text-gray-600 dark:text-gray-400 hover:text-spotify-green transition-colors duration-200">
+                        <i class="fas fa-heart mr-2"></i>Favorites <span class="bg-spotify-green text-white text-xs px-2 py-1 rounded-full ml-2" data-bind="favorites.length">3</span>
+                    </a>
+                </div>
+                
+                <!-- Theme Toggle & Mobile Menu -->
+                <div class="flex items-center space-x-4">
+                    <!-- Theme Toggle Button -->
+                    <button id="themeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-dark-hover hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200">
+                        <i class="fas fa-moon dark:hidden text-gray-600"></i>
+                        <i class="fas fa-sun hidden dark:inline text-yellow-400"></i>
+                    </button>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button class="md:hidden p-2 rounded-lg bg-gray-100 dark:bg-dark-hover">
+                        <i class="fas fa-bars text-gray-600 dark:text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Navigation -->
+        <div class="md:hidden bg-gray-50 dark:bg-dark-bg border-t dark:border-gray-700">
+            <div class="px-4 py-3 space-y-2">
+                <a href="#" class="mobile-nav-link flex items-center text-spotify-green font-medium py-2">
+                    <i class="fas fa-home mr-3"></i>Home
+                </a>
+                <a href="#" class="mobile-nav-link flex items-center text-gray-600 dark:text-gray-400 py-2">
+                    <i class="fas fa-heart mr-3"></i>Favorites <span class="bg-spotify-green text-white text-xs px-2 py-1 rounded-full ml-2">3</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: Navbar -->
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- @PAGE: Home -->
+        <div id="homePage">
+            
+            <!-- @COMPONENT: SearchBar -->
+            <div class="mb-8">
+                <div class="text-center mb-6">
+                    <h1 class="text-3xl md:text-4xl font-bold mb-2">Discover Music</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Search for your favorite songs, albums, and artists</p>
+                </div>
+                
+                <div class="max-w-2xl mx-auto relative">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input 
+                            type="text" 
+                            placeholder="Search for music..." 
+                            data-mock="true"
+                            data-implementation="Should connect to iTunes Search API"
+                            class="w-full pl-12 pr-4 py-4 text-lg bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-spotify-green focus:border-transparent transition-all duration-200 shadow-sm"
+                        >
+                        <button class="absolute right-3 top-1/2 transform -translate-y-1/2 bg-spotify-green hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                            Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: SearchBar -->
+            
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden text-center py-12">
+                <div class="inline-flex items-center space-x-2">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-spotify-green"></div>
+                    <span class="text-gray-600 dark:text-gray-400">Searching for music...</span>
+                </div>
+            </div>
+            
+            <!-- Search Results -->
+            <div id="searchResults">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-semibold">Search Results</h2>
+                    <span class="text-gray-600 dark:text-gray-400" data-mock="true">12 tracks found</span>
+                </div>
+                
+                <!-- Track Grid -->
+                <!-- @MAP: searchResults.map(track => ( -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    
+                    <!-- @COMPONENT: TrackCard -->
+                    <div class="track-card bg-white dark:bg-dark-card rounded-xl shadow-sm hover:shadow-lg dark:shadow-gray-800 hover:dark:shadow-gray-700 transition-all duration-300 hover:-translate-y-1 group">
+                        <div class="p-4">
+                            <div class="relative mb-4">
+                                <!-- Album art displaying a vibrant music album cover -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400" alt="Album cover" class="w-full aspect-square object-cover rounded-lg">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-lg flex items-center justify-center">
+                                    <button class="play-btn opacity-0 group-hover:opacity-100 bg-spotify-green hover:bg-green-600 text-white p-3 rounded-full transition-all duration-200 transform scale-90 group-hover:scale-100">
+                                        <i class="fas fa-play ml-1"></i>
+                                    </button>
+                                </div>
+                                <button class="favorite-btn absolute top-2 right-2 p-2 bg-black bg-opacity-50 rounded-full text-white hover:text-red-400 transition-colors duration-200">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="font-semibold truncate" data-bind="track.trackName" data-mock="true">Blinding Lights</h3>
+                                <p class="text-gray-600 dark:text-gray-400 truncate" data-bind="track.artistName" data-mock="true">The Weeknd</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-500 truncate" data-bind="track.collectionName" data-mock="true">After Hours</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Track Card 2 -->
+                    <div class="track-card bg-white dark:bg-dark-card rounded-xl shadow-sm hover:shadow-lg dark:shadow-gray-800 hover:dark:shadow-gray-700 transition-all duration-300 hover:-translate-y-1 group">
+                        <div class="p-4">
+                            <div class="relative mb-4">
+                                <!-- Colorful album cover with modern pop aesthetic -->
+                                <img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400" alt="Album cover" class="w-full aspect-square object-cover rounded-lg">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-lg flex items-center justify-center">
+                                    <button class="play-btn opacity-0 group-hover:opacity-100 bg-spotify-green hover:bg-green-600 text-white p-3 rounded-full transition-all duration-200 transform scale-90 group-hover:scale-100">
+                                        <i class="fas fa-play ml-1"></i>
+                                    </button>
+                                </div>
+                                <button class="favorite-btn absolute top-2 right-2 p-2 bg-black bg-opacity-50 rounded-full text-red-400 hover:text-red-300 transition-colors duration-200">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="font-semibold truncate" data-mock="true">Stay</h3>
+                                <p class="text-gray-600 dark:text-gray-400 truncate" data-mock="true">The Kid LAROI & Justin Bieber</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-500 truncate" data-mock="true">F*CK LOVE 3: OVER YOU</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Track Card 3 -->
+                    <div class="track-card bg-white dark:bg-dark-card rounded-xl shadow-sm hover:shadow-lg dark:shadow-gray-800 hover:dark:shadow-gray-700 transition-all duration-300 hover:-translate-y-1 group">
+                        <div class="p-4">
+                            <div class="relative mb-4">
+                                <!-- Artistic album cover with vinyl record aesthetic -->
+                                <img src="https://images.unsplash.com/photo-1571330735066-03aaa9429d89?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400" alt="Album cover" class="w-full aspect-square object-cover rounded-lg">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-lg flex items-center justify-center">
+                                    <button class="play-btn opacity-0 group-hover:opacity-100 bg-spotify-green hover:bg-green-600 text-white p-3 rounded-full transition-all duration-200 transform scale-90 group-hover:scale-100">
+                                        <i class="fas fa-play ml-1"></i>
+                                    </button>
+                                </div>
+                                <button class="favorite-btn absolute top-2 right-2 p-2 bg-black bg-opacity-50 rounded-full text-white hover:text-red-400 transition-colors duration-200">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="font-semibold truncate" data-mock="true">Good 4 U</h3>
+                                <p class="text-gray-600 dark:text-gray-400 truncate" data-mock="true">Olivia Rodrigo</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-500 truncate" data-mock="true">SOUR</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Track Card 4 -->
+                    <div class="track-card bg-white dark:bg-dark-card rounded-xl shadow-sm hover:shadow-lg dark:shadow-gray-800 hover:dark:shadow-gray-700 transition-all duration-300 hover:-translate-y-1 group">
+                        <div class="p-4">
+                            <div class="relative mb-4">
+                                <!-- Electronic music themed album cover -->
+                                <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400" alt="Album cover" class="w-full aspect-square object-cover rounded-lg">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-lg flex items-center justify-center">
+                                    <button class="play-btn opacity-0 group-hover:opacity-100 bg-spotify-green hover:bg-green-600 text-white p-3 rounded-full transition-all duration-200 transform scale-90 group-hover:scale-100">
+                                        <i class="fas fa-play ml-1"></i>
+                                    </button>
+                                </div>
+                                <button class="favorite-btn absolute top-2 right-2 p-2 bg-black bg-opacity-50 rounded-full text-white hover:text-red-400 transition-colors duration-200">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="font-semibold truncate" data-mock="true">Industry Baby</h3>
+                                <p class="text-gray-600 dark:text-gray-400 truncate" data-mock="true">Lil Nas X & Jack Harlow</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-500 truncate" data-mock="true">MONTERO</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional tracks following same pattern -->
+                    <div class="track-card bg-white dark:bg-dark-card rounded-xl shadow-sm hover:shadow-lg dark:shadow-gray-800 hover:dark:shadow-gray-700 transition-all duration-300 hover:-translate-y-1 group">
+                        <div class="p-4">
+                            <div class="relative mb-4">
+                                <!-- Indie rock album cover with vintage aesthetics -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400" alt="Album cover" class="w-full aspect-square object-cover rounded-lg">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-lg flex items-center justify-center">
+                                    <button class="play-btn opacity-0 group-hover:opacity-100 bg-spotify-green hover:bg-green-600 text-white p-3 rounded-full transition-all duration-200 transform scale-90 group-hover:scale-100">
+                                        <i class="fas fa-play ml-1"></i>
+                                    </button>
+                                </div>
+                                <button class="favorite-btn absolute top-2 right-2 p-2 bg-black bg-opacity-50 rounded-full text-red-400 hover:text-red-300 transition-colors duration-200">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="font-semibold truncate" data-mock="true">Heat Waves</h3>
+                                <p class="text-gray-600 dark:text-gray-400 truncate" data-mock="true">Glass Animals</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-500 truncate" data-mock="true">Dreamland</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="track-card bg-white dark:bg-dark-card rounded-xl shadow-sm hover:shadow-lg dark:shadow-gray-800 hover:dark:shadow-gray-700 transition-all duration-300 hover:-translate-y-1 group">
+                        <div class="p-4">
+                            <div class="relative mb-4">
+                                <!-- Hip-hop album cover with urban street art style -->
+                                <img src="https://images.unsplash.com/photo-1506157786151-b8491531f063?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400" alt="Album cover" class="w-full aspect-square object-cover rounded-lg">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-lg flex items-center justify-center">
+                                    <button class="play-btn opacity-0 group-hover:opacity-100 bg-spotify-green hover:bg-green-600 text-white p-3 rounded-full transition-all duration-200 transform scale-90 group-hover:scale-100">
+                                        <i class="fas fa-play ml-1"></i>
+                                    </button>
+                                </div>
+                                <button class="favorite-btn absolute top-2 right-2 p-2 bg-black bg-opacity-50 rounded-full text-white hover:text-red-400 transition-colors duration-200">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="font-semibold truncate" data-mock="true">Anti-Hero</h3>
+                                <p class="text-gray-600 dark:text-gray-400 truncate" data-mock="true">Taylor Swift</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-500 truncate" data-mock="true">Midnights</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+            <!-- @END_COMPONENT: TrackCard -->
+            
+        </div>
+        <!-- @END_PAGE: Home -->
+        
+        <!-- @PAGE: Favorites -->
+        <div id="favoritesPage" class="hidden">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Your Favorites</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Your personally curated music collection</p>
+                </div>
+                <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200" data-event="click:clearAllFavorites">
+                    <i class="fas fa-trash mr-2"></i>Clear All
+                </button>
+            </div>
+            
+            <!-- Favorites Empty State -->
+            <div id="emptyFavorites" class="hidden text-center py-16">
+                <i class="fas fa-heart text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">No favorites yet</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">Start building your collection by favoriting tracks you love</p>
+                <button class="bg-spotify-green hover:bg-green-600 text-white px-6 py-3 rounded-lg transition-colors duration-200" data-event="click:goToSearch">
+                    <i class="fas fa-search mr-2"></i>Start Searching
+                </button>
+            </div>
+            
+            <!-- Favorites List -->
+            <div class="space-y-4">
+                <!-- @MAP: favorites.map(track => ( -->
+                <div class="favorite-track bg-white dark:bg-dark-card rounded-xl p-4 shadow-sm hover:shadow-lg dark:shadow-gray-800 transition-all duration-300 group">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <!-- Favorited album cover showing electronic dance music aesthetic -->
+                            <img src="https://images.unsplash.com/photo-1571330735066-03aaa9429d89?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80" alt="Album cover" class="w-20 h-20 object-cover rounded-lg">
+                            <button class="play-btn-small absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                <i class="fas fa-play text-white text-lg"></i>
+                            </button>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold truncate" data-mock="true">Stay</h3>
+                            <p class="text-gray-600 dark:text-gray-400 truncate" data-mock="true">The Kid LAROI & Justin Bieber</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-500 truncate" data-mock="true">F*CK LOVE 3: OVER YOU</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="p-2 text-spotify-green hover:text-green-600 transition-colors duration-200" data-event="click:playTrack">
+                                <i class="fas fa-play text-lg"></i>
+                            </button>
+                            <button class="p-2 text-red-500 hover:text-red-600 transition-colors duration-200" data-event="click:removeFavorite">
+                                <i class="fas fa-heart text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="favorite-track bg-white dark:bg-dark-card rounded-xl p-4 shadow-sm hover:shadow-lg dark:shadow-gray-800 transition-all duration-300 group">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <!-- Favorited album cover with pop music vibes -->
+                            <img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80" alt="Album cover" class="w-20 h-20 object-cover rounded-lg">
+                            <button class="play-btn-small absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                <i class="fas fa-play text-white text-lg"></i>
+                            </button>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold truncate" data-mock="true">Heat Waves</h3>
+                            <p class="text-gray-600 dark:text-gray-400 truncate" data-mock="true">Glass Animals</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-500 truncate" data-mock="true">Dreamland</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="p-2 text-spotify-green hover:text-green-600 transition-colors duration-200" data-event="click:playTrack">
+                                <i class="fas fa-play text-lg"></i>
+                            </button>
+                            <button class="p-2 text-red-500 hover:text-red-600 transition-colors duration-200" data-event="click:removeFavorite">
+                                <i class="fas fa-heart text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="favorite-track bg-white dark:bg-dark-card rounded-xl p-4 shadow-sm hover:shadow-lg dark:shadow-gray-800 transition-all duration-300 group">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <!-- Favorited album cover with artistic modern design -->
+                            <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80" alt="Album cover" class="w-20 h-20 object-cover rounded-lg">
+                            <button class="play-btn-small absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                <i class="fas fa-play text-white text-lg"></i>
+                            </button>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold truncate" data-mock="true">Blinding Lights</h3>
+                            <p class="text-gray-600 dark:text-gray-400 truncate" data-mock="true">The Weeknd</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-500 truncate" data-mock="true">After Hours</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="p-2 text-spotify-green hover:text-green-600 transition-colors duration-200" data-event="click:playTrack">
+                                <i class="fas fa-play text-lg"></i>
+                            </button>
+                            <button class="p-2 text-red-500 hover:text-red-600 transition-colors duration-200" data-event="click:removeFavorite">
+                                <i class="fas fa-heart text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+        <!-- @END_PAGE: Favorites -->
+        
+    </div>
+    
+    <!-- @COMPONENT: Player (Fixed Bottom Player) -->
+    <div id="musicPlayer" class="hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-card border-t dark:border-gray-700 p-4 shadow-2xl z-40">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4 flex-1 min-w-0">
+                <!-- Current playing track album cover -->
+                <img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=60&h=60" alt="Now playing" class="w-15 h-15 object-cover rounded-lg" data-bind="currentTrack.albumArt">
+                <div class="min-w-0">
+                    <h4 class="font-medium truncate" data-bind="currentTrack.name" data-mock="true">Stay</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 truncate" data-bind="currentTrack.artist" data-mock="true">The Kid LAROI & Justin Bieber</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4 mx-6">
+                <button class="p-2 hover:text-spotify-green transition-colors duration-200" data-event="click:previousTrack">
+                    <i class="fas fa-step-backward"></i>
+                </button>
+                <button class="bg-spotify-green hover:bg-green-600 text-white p-3 rounded-full transition-colors duration-200" data-event="click:togglePlayPause">
+                    <i class="fas fa-pause"></i>
+                </button>
+                <button class="p-2 hover:text-spotify-green transition-colors duration-200" data-event="click:nextTrack">
+                    <i class="fas fa-step-forward"></i>
+                </button>
+            </div>
+            
+            <div class="flex items-center space-x-4 flex-1 justify-end">
+                <div class="hidden sm:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                    <span data-bind="currentTime" data-mock="true">1:23</span>
+                    <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-1">
+                        <div class="bg-spotify-green h-1 rounded-full" style="width: 45%" data-bind="progressPercentage"></div>
+                    </div>
+                    <span data-bind="duration" data-mock="true">3:02</span>
+                </div>
+                <button class="p-2 hover:text-spotify-green transition-colors duration-200" data-event="click:toggleMute">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <button class="p-2 hover:text-red-400 transition-colors duration-200" data-event="click:closePlaye">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Hidden Audio Element -->
+        <!-- @FUNCTIONALITY: Should use HTML5 audio for 30-second previews from iTunes API -->
+        <audio id="audioPlayer" data-implementation="Connect to iTunes preview URLs">
+            <!-- Audio source will be dynamically set via JavaScript -->
+        </audio>
+    </div>
+    <!-- @END_COMPONENT: Player -->
+    
+    <!-- Error Toast -->
+    <div id="errorToast" class="hidden fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <p class="font-medium">Error</p>
+                <p class="text-sm" data-bind="error.message" data-mock="true">Failed to fetch music data. Please try again.</p>
+            </div>
+            <button class="ml-4 hover:text-gray-200" data-event="click:dismissError">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+    (function() {
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Check for saved theme preference or default to 'dark'
+        // TODO: Implement localStorage persistence for theme preference
+        let currentTheme = 'dark';
+        
+        themeToggle.addEventListener('click', () => {
+            if (currentTheme === 'dark') {
+                html.classList.remove('dark');
+                currentTheme = 'light';
+                // TODO: Save to localStorage
+            } else {
+                html.classList.add('dark');
+                currentTheme = 'dark';
+                // TODO: Save to localStorage
+            }
+        });
+        
+        // Navigation between pages
+        const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
+        const homePage = document.getElementById('homePage');
+        const favoritesPage = document.getElementById('favoritesPage');
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.dataset.page;
+                
+                // Update active nav state
+                navLinks.forEach(l => {
+                    l.classList.remove('text-spotify-green', 'font-medium', 'border-b-2', 'border-spotify-green', 'pb-1');
+                    l.classList.add('text-gray-600', 'dark:text-gray-400');
+                });
+                
+                link.classList.remove('text-gray-600', 'dark:text-gray-400');
+                link.classList.add('text-spotify-green', 'font-medium');
+                
+                if (!link.classList.contains('mobile-nav-link')) {
+                    link.classList.add('border-b-2', 'border-spotify-green', 'pb-1');
+                }
+                
+                // Show appropriate page
+                if (page === 'home') {
+                    homePage.classList.remove('hidden');
+                    favoritesPage.classList.add('hidden');
+                } else if (page === 'favorites') {
+                    homePage.classList.add('hidden');
+                    favoritesPage.classList.remove('hidden');
+                }
+            });
+        });
+        
+        // Favorite button functionality
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        favoriteButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const icon = btn.querySelector('i');
+                
+                if (icon.classList.contains('far')) {
+                    // Add to favorites
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    btn.classList.add('text-red-400');
+                    btn.classList.remove('text-white');
+                    // TODO: Add to localStorage favorites
+                } else {
+                    // Remove from favorites
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    btn.classList.remove('text-red-400');
+                    btn.classList.add('text-white');
+                    // TODO: Remove from localStorage favorites
+                }
+            });
+        });
+        
+        // Play button functionality
+        const playButtons = document.querySelectorAll('.play-btn, .play-btn-small');
+        const musicPlayer = document.getElementById('musicPlayer');
+        
+        playButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // TODO: Implement audio playback with iTunes preview URL
+                // Show player
+                musicPlayer.classList.remove('hidden');
+                // TODO: Update currentTrack data
+                // TODO: Start audio playback
+            });
+        });
+        
+        // Search functionality
+        const searchInput = document.querySelector('input[type="text"]');
+        const searchButton = document.querySelector('button');
+        const loadingState = document.getElementById('loadingState');
+        const searchResults = document.getElementById('searchResults');
+        
+        function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+            
+            // Show loading state
+            searchResults.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            
+            // TODO: Implement iTunes API search
+            // Simulate API call
+            setTimeout(() => {
+                loadingState.classList.add('hidden');
+                searchResults.classList.remove('hidden');
+                // TODO: Update search results with API data
+            }, 2000);
+        }
+        
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+        
+        // Audio player controls
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playPauseBtn = document.querySelector('[data-event="click:togglePlayPause"]');
+        
+        if (playPauseBtn) {
+            playPauseBtn.addEventListener('click', () => {
+                const icon = playPauseBtn.querySelector('i');
+                if (icon.classList.contains('fa-play')) {
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-pause');
+                    // TODO: Play audio
+                } else {
+                    icon.classList.remove('fa-pause');
+                    icon.classList.add('fa-play');
+                    // TODO: Pause audio
+                }
+            });
+        }
+        
+        // Close player
+        const closePlayerBtn = document.querySelector('[data-event="click:closePlaye"]');
+        if (closePlayerBtn) {
+            closePlayerBtn.addEventListener('click', () => {
+                musicPlayer.classList.add('hidden');
+                // TODO: Stop audio playback
+            });
+        }
+        
+        // Error handling
+        function showError(message) {
+            const errorToast = document.getElementById('errorToast');
+            const errorMessage = errorToast.querySelector('[data-bind="error.message"]');
+            errorMessage.textContent = message;
+            errorToast.classList.remove('hidden');
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                errorToast.classList.add('hidden');
+            }, 5000);
+        }
+        
+        const dismissErrorBtn = document.querySelector('[data-event="click:dismissError"]');
+        if (dismissErrorBtn) {
+            dismissErrorBtn.addEventListener('click', () => {
+                document.getElementById('errorToast').classList.add('hidden');
+            });
+        }
+        
+        // TODO: Implement localStorage utilities for favorites persistence
+        // TODO: Implement iTunes Search API integration
+        // TODO: Implement audio playback functionality
+        // TODO: Implement responsive design enhancements
+        // TODO: Add Framer Motion animations (requires React conversion)
+        
+    })();
+    </script>
+</body>
+</html>
