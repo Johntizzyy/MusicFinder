@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.ts" // Point to your TS source file
+      "destination": "/api/index.ts"
     },
     {
       "source": "/(.*)",
@@ -13,7 +13,7 @@
     }
   ],
   "functions": {
-    "api/index.ts": { // Change .js to .ts here too
+    "api/index.ts": {
       "runtime": "nodejs18.x"
     }
   },
