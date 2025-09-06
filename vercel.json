@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.ts"
+      "destination": "/api/index.js"
     },
     {
       "source": "/(.*)",
@@ -13,8 +13,8 @@
     }
   ],
   "functions": {
-    "api/index.ts": {
-      "runtime": "nodejs18.x"
+    "api/index.js": {
+      "runtime": "@vercel/node@2.15.10"
     }
   },
   "env": {
